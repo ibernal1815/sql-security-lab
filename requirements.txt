@@ -1,0 +1,38 @@
+# Core application dependencies
+Flask>=2.3
+psycopg2-binary>=2.9
+python-dotenv>=0.21.0
+Werkzeug>=2.3
+itsdangerous>=2.1
+click>=8.1
+requests>=2.31
+
+# Database and data handling
+SQLAlchemy>=2.0
+Flask-SQLAlchemy>=3.0
+alembic>=1.11     # optional: for schema migrations
+faker>=18.0       # for generating test data
+pandas>=2.0       # optional: for data analysis and query profiling
+
+# Security and cryptography
+bcrypt>=4.0
+cryptography>=41.0
+pyOpenSSL>=23.0
+
+# Utilities and tooling
+loguru>=0.7.0     # structured logging
+rich>=13.0        # rich console output
+python-dateutil>=2.8
+colorama>=0.4.6
+
+# Testing and linting
+pytest>=7.3
+pytest-cov>=4.0
+flake8>=6.0
+black>=23.0
+isort>=5.12
+mypy>=1.4
+
+# Environment and deployment helpers
+gunicorn>=21.0
+uvicorn>=0.23.0
