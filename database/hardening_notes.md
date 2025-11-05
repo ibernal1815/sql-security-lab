@@ -1,24 +1,46 @@
 # PostgreSQL Hardening Notes
 
-This document outlines the security configuration and hardening steps implemented for the SQL Security Lab project. It serves as a technical record of the decisions made while setting up PostgreSQL in a secure, isolated environment. The goal was to understand and apply modern best practices for database security, authentication, encryption, and least-privilege design.
+This file explains how I set up and secured PostgreSQL for my SQL Security Lab project.  
+I made this as part of learning how to protect databases against attacks like SQL injection and to understand how authentication, encryption, and user permissions work.
 
-Scope: Local PostgreSQL instance used for development and testing of SQL security concepts. Objective: Build a secure baseline configuration resistant to unauthorized access, SQL injection, and privilege escalation. Environment: Single-node Linux setup (Mint/Ubuntu), not exposed to the public internet. Threats considered: Credential theft, SQL injection, network sniffing, and accidental privilege misuse.
+---
 
-PostgreSQL is bound only to the local interface:
+## Project Overview
+
+This was a local PostgreSQL setup (on Linux Mint/Ubuntu).  
+The goal was to keep it locked down, safe to experiment with, and close to what a secure production setup should look like.
+
+**Main security goals:**
+- Stop outside connections and keep everything local.
+- Use strong password protection and encryption.
+- Only give users the access they really need.
+- Prevent SQL injection and risky queries.
+- Keep logs and backups in case something breaks.
+
+---
+
+## Network Setup
+
+The database only listens on the local computer. That means no one outside can connect:
 
 ```
 listen_addresses = 'localhost'
 port = 5432
 ```
 
-No remote access is permitted by default. If remote access is ever needed, it should be restricted by subnet and controlled via firewall:
+If remote access is ever needed for testing, it should be allowed only for specific IPs through a firewall:
 
 ```
 sudo ufw default deny incoming
 sudo ufw allow from 192.168.56.1 to any port 5432 proto tcp
 ```
 
-The host-based authentication file enforces modern password hashing and local peer authentication:
+---
+
+## Authentication Settings
+
+PostgreSQL checks who’s connecting using the `pg_hba.conf` file.  
+I used peer authentication for the local admin user and SCRAM for everything else:
 
 ```
 local   all   all                           peer
@@ -26,16 +48,19 @@ host    all   all   127.0.0.1/32            scram-sha-256
 host    all   all   ::1/128                 scram-sha-256
 ```
 
-Modern password encryption method enforced globally:
+SCRAM-SHA-256 is stronger than the old MD5 system, and this setting makes PostgreSQL use it by default:
 
 ```
 password_encryption = scram-sha-256
 ```
 
-Peer authentication allows trusted local administrative access, while TCP connections require SCRAM-SHA-256, which replaces the older MD5 mechanism.
+---
 
-Self-signed certificates were created for SSL (lab use only):
+## Enabling SSL (Encrypted Connections)
 
+I turned on SSL so that if I ever connect over a network, the traffic is encrypted.
+
+Steps I took:
 ```
 sudo chown postgres:postgres /etc/postgresql/ssl/server.key
 sudo chmod 600 /etc/postgresql/ssl/server.key
@@ -43,23 +68,24 @@ sudo chown postgres:postgres /etc/postgresql/ssl/server.crt
 sudo chmod 644 /etc/postgresql/ssl/server.crt
 ```
 
-Enabled SSL and pointed PostgreSQL to the certificate paths:
-
+Then I added this to `postgresql.conf`:
 ```
 ssl = on
 ssl_cert_file = '/etc/postgresql/ssl/server.crt'
 ssl_key_file  = '/etc/postgresql/ssl/server.key'
 ```
 
-All application connections enforce SSL mode:
-
+And the app connects using:
 ```
 sslmode=require
 ```
 
-Encryption in transit ensures credentials and queries cannot be intercepted even within local or virtualized networks.
+---
 
-The `postgres` superuser is not used by any applications. Separate read/write roles and a login role for the app were created.
+## Roles and Permissions (Least Privilege)
+
+I didn’t use the main `postgres` superuser for my apps.  
+Instead, I made smaller roles with only the permissions they actually need.
 
 ```
 CREATE ROLE app_read NOINHERIT;
@@ -80,9 +106,17 @@ GRANT app_read, app_write TO myappuser;
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
 ```
 
-The application is limited to only the queries it requires. This prevents privilege misuse and reduces impact if the app is compromised.
+This setup means:
+- The app can’t mess with database structure.
+- It can only read or write where it’s supposed to.
+- Even if the app gets hacked, the attacker is limited.
 
-Row-Level Security is used to demonstrate tenant data isolation via session variables.
+---
+
+## Row-Level Security (RLS)
+
+To simulate a multi-tenant app (like one database for many users), I used RLS.  
+It lets PostgreSQL automatically filter which rows a user can see based on a “tenant” setting.
 
 ```
 CREATE OR REPLACE FUNCTION current_tenant() RETURNS int
@@ -98,15 +132,18 @@ CREATE POLICY orders_tenant_isolation
   ON orders USING (tenant_id = current_tenant());
 ```
 
-Application sets tenant context per session:
-
+The app tells PostgreSQL which tenant is active:
 ```
 SET app.current_tenant = '1';
 ```
 
-Superusers and roles with `BYPASSRLS` can override these policies, so application roles must not have those privileges.
+This is a strong way to separate user data at the database level.
 
-All queries in the secure app use parameterized statements:
+---
+
+## Safe Query Practices
+
+In the secure version of my Flask app, every query uses parameters instead of string concatenation.
 
 ```
 cur.execute(
@@ -115,9 +152,16 @@ cur.execute(
 )
 ```
 
-Inputs are type-validated (`Decimal`, `int`, etc.) before executing queries. No `SELECT *` is used in production-facing code. Parameterized queries ensure user input is treated as data, not executable SQL, completely neutralizing injection attacks.
+Why it matters:
+- Prevents SQL injection completely.
+- Makes the code easier to maintain.
+- Forces PostgreSQL to handle escaping safely.
 
-Logging is enabled to capture meaningful events and slow queries.
+---
+
+## Logging and Auditing
+
+I turned on PostgreSQL’s logging to track what’s going on:
 
 ```
 logging_collector = on
@@ -128,7 +172,7 @@ log_disconnections = on
 log_line_prefix = '%m [%p] %u@%d %h '
 ```
 
-Query monitoring is enabled with `pg_stat_statements`:
+I also used the `pg_stat_statements` extension to monitor which queries run the most:
 
 ```
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
@@ -138,50 +182,74 @@ ORDER BY total_time DESC
 LIMIT 10;
 ```
 
-Logs are rotated automatically under `/var/log/postgresql/`.
+Logs go to `/var/log/postgresql/`.
 
-Indexes were created for common query paths and performance tested.
+---
+
+## Indexes and Performance
+
+I added indexes to speed up common lookups:
 
 ```
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_amount_big ON orders(amount) WHERE amount > 75;
 ```
 
-Benchmarked using:
-
+Then I checked improvements using:
 ```
 EXPLAIN ANALYZE SELECT * FROM orders WHERE user_id = 2;
 ```
 
-Optimized indexing improved execution time and mitigated the risk of long-running sequential scans.
+Indexes make queries faster and reduce database load.
 
-Logical backups tested using `pg_dump` and `pg_restore`:
+---
+
+## Backups and Restore Tests
+
+Practiced creating and restoring backups:
 
 ```
 pg_dump -h 127.0.0.1 -U myappuser -Fc -f /tmp/myappdb.dump myappdb
 pg_restore -h 127.0.0.1 -U myappuser -d myappdb_restore /tmp/myappdb.dump
 ```
 
-Post-restore verification includes row count and constraint validation.
+After restoring, I compared row counts to make sure everything copied correctly.
 
-System-level permissions and ownership:
+---
 
-- `/var/lib/postgresql/` owned by `postgres:postgres`
-- `/etc/postgresql/` configuration files writable only by root or postgres
-- SSH key authentication enforced; password login disabled
-- Regular updates for PostgreSQL and system packages applied
+## Operating System Security
 
-These steps ensure that even if the database is secure internally, its underlying environment remains hardened.
+- `/var/lib/postgresql/` is owned by `postgres:postgres`
+- `/etc/postgresql/` configs can only be changed by `root` or `postgres`
+- SSH login uses keys instead of passwords
+- PostgreSQL and OS packages are kept up to date
+
+---
+
+## Quick Security Checklist
 
 | Check | Description |
 |-------|--------------|
-| ✅ `listen_addresses='localhost'` | Prevents external exposure |
-| ✅ `scram-sha-256` | Modern password authentication |
-| ✅ TLS enabled | Encrypts data in transit |
-| ✅ Least-privilege roles | Isolates access scope |
-| ✅ Parameterized queries | Prevents SQL injection |
-| ✅ RLS active | Enforces tenant data isolation |
-| ✅ Logging active | Enables visibility and auditing |
-| ✅ Backups tested | Confirms disaster recovery capability |
+| ✅ Only localhost connections | No external exposure |
+| ✅ SCRAM-SHA-256 | Strong password hashing |
+| ✅ SSL enabled | Data encrypted in transit |
+| ✅ Limited roles | App runs with least privilege |
+| ✅ Parameterized queries | Stops SQL injection |
+| ✅ RLS | Tenant-level data separation |
+| ✅ Logging active | Tracks connections and slow queries |
+| ✅ Backups tested | Verified restore works |
 
-This PostgreSQL setup follows a layered defense strategy: restrict access at the network and role level, enforce modern authentication (SCRAM-SHA-256) and encryption (TLS), apply least privilege through role and schema management, use parameterized queries for injection prevention, enable observability with query and connection logging, and maintain tested backups for recovery assurance. Together, these measures create a resilient foundation against common attack vectors like SQL injection, credential theft, and privilege escalation while remaining lightweight enough for a personal development lab.
+---
+
+## Summary
+
+This project helped me understand how real database hardening works.  
+By combining:
+- local-only access,
+- strong authentication and encryption,
+- least-privilege roles,
+- parameterized queries,
+- logging, and
+- regular backups,
+
+I built a PostgreSQL setup that’s secure, efficient, and realistic enough for learning professional cybersecurity and DevSecOps practices.
