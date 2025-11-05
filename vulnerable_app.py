@@ -1,3 +1,6 @@
+# WARNING: This file is intentionally insecure and only for local/lab use.
+# Do NOT run this app on any public network. Use in an isolated VM or Codespace only.
+
 # vulnerable_app.py
 from flask import Flask, request
 import psycopg2
