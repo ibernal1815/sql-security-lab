@@ -1,0 +1,45 @@
+
+---
+
+# `.gitignore`
+```gitignore
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# venv
+.venv/
+venv/
+env/
+ENV/
+
+# SQLite / DB files
+*.sqlite3
+*.db
+*.db-journal
+
+# env files
+.env
+.env.* 
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# macOS
+.DS_Store
+
+# logs
+*.log
+
+# distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# node (if you add front-end later)
+node_modules/
