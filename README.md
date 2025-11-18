@@ -90,18 +90,19 @@ Screenshots for each phase can be found in `/screenshots`:
 ### System
 - Linux Mint or Ubuntu VM
 - PostgreSQL (tested with version 14+)
-- Python3 and virtualenv
+- Python 3 and virtualenv
 
 ### Python Libraries
 
-- Install using:
-
-`pip install -r requirements.txt`
+Install dependencies using:
+```bash
+pip install -r requirements.txt
 
 - Minimal set includes:
-`- Flask`
-`- psycopg2-binary`
-`- python-dotenv`
+Flask
+psycopg2-binary
+python-dotenv
+```
 
 ---
 
