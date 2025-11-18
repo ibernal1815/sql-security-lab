@@ -93,17 +93,15 @@ Screenshots for each phase can be found in `/screenshots`:
 - Python3 and virtualenv
 
 ### Python Libraries
-Install using:
 
-pip install -r requirements.txt
+- Install using:
 
-yaml
-Copy code
+`pip install -r requirements.txt`
 
-Minimal set includes:
-- Flask
-- psycopg2-binary
-- python-dotenv
+- Minimal set includes:
+`- Flask`
+`- psycopg2-binary`
+`- python-dotenv`
 
 ---
 
@@ -114,35 +112,23 @@ Minimal set includes:
 git clone https://github.com/yourname/sql_security_lab.git
 cd sql_security_lab
 
-cpp
-Copy code
-
 2. Start your virtual environment:
 
 python3 -m venv venv
 source venv/bin/activate
 
-markdown
-Copy code
-
 3. Initialize database:
 
-sudo -u postgres psql -f database/roles.sql
-sudo -u postgres psql -f database/schema.sql
-sudo -u postgres psql -f database/seed_data.sql
-
-markdown
-Copy code
+- `sudo -u postgres psql -f database/roles.sql`
+- `sudo -u postgres psql -f database/schema.sql`
+- `sudo -u postgres psql -f database/seed_data.sql`
 
 4. Run the secure or vulnerable app:
 
-python vulnerable_app.py
+- `python vulnerable_app.py`
 
 or
-python secure_app.py
-
-yaml
-Copy code
+- `python secure_app.py`
 
 ---
 
