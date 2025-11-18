@@ -99,7 +99,7 @@ Install dependencies using:
 pip install -r requirements.txt
 ```
 
-# Minimal set includes:
+### Minimal set includes:
 - Flask
 - psycopg2-binary
 - python-dotenv
@@ -108,28 +108,31 @@ pip install -r requirements.txt
 
 ## Setup
 
-1. Clone the repository:
+### 1. Clone the repository:
 
+```
 git clone https://github.com/yourname/sql_security_lab.git
 cd sql_security_lab
+```
 
-2. Start your virtual environment:
+### 2. Start your virtual environment:
 
+```
 python3 -m venv venv
 source venv/bin/activate
+```
 
-3. Initialize database:
+### 3. Initialize database:
 
-- `sudo -u postgres psql -f database/roles.sql`
-- `sudo -u postgres psql -f database/schema.sql`
-- `sudo -u postgres psql -f database/seed_data.sql`
+`sudo -u postgres psql -f database/roles.sql`
+`sudo -u postgres psql -f database/schema.sql`
+`sudo -u postgres psql -f database/seed_data.sql`
 
-4. Run the secure or vulnerable app:
+### 4. Run the secure or vulnerable app:
 
-- `python vulnerable_app.py`
-
+`python vulnerable_app.py`
 or
-- `python secure_app.py`
+`python secure_app.py`
 
 ---
 
