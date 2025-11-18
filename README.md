@@ -97,12 +97,12 @@ Screenshots for each phase can be found in `/screenshots`:
 Install dependencies using:
 ```bash
 pip install -r requirements.txt
-
-- Minimal set includes:
-Flask
-psycopg2-binary
-python-dotenv
 ```
+
+# Minimal set includes:
+- Flask
+- psycopg2-binary
+- python-dotenv
 
 ---
 
