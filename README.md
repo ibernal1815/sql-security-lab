@@ -20,24 +20,28 @@ The goal of this lab is to gain hands-on experience with:
 
 ## Project Structure
 
+```plaintext
 sql_security_lab/
 ├── app/
-│   ├── config.py            # Database configuration and environment loading
-│   ├── db.py                # Secure and insecure DB connection helpers
-│   ├── seed.py              # Initializes schema and seeds data
+│   ├── config.py          # Database configuration and environment loading
+│   ├── db.py              # Secure and insecure DB connection helpers
+│   ├── seed.py            # Initializes schema and seeds data
+│
 ├── database/
-│   ├── roles.sql            # Defines database roles and permissions
-│   ├── schema.sql           # Defines the application schema
-│   ├── seed_data.sql        # Inserts sample user data
+│   ├── roles.sql          # Defines database roles and permissions
+│   ├── schema.sql         # Defines the application schema
+│   ├── seed_data.sql      # Inserts sample user data
+│
 ├── scripts/
-│   ├── start_postgres.sh    # Script to start PostgreSQL service
-│   ├── init_db.sh           # Wrapper for running SQL setup scripts
-├── vulnerable_app.py        # Insecure Flask app (vulnerable to SQL injection)
-├── secure_app.py            # Secure Flask app (parameterized queries & RLS)
-├── requirements.txt         # Python dependencies
-├── .env                     # Environment file for DB credentials
-└── README.md                # Project documentation
-
+│   ├── start_postgres.sh  # Script to start PostgreSQL service
+│   ├── init_db.sh         # Wrapper for running SQL setup scripts
+│
+├── vulnerable_app.py      # Insecure Flask app (vulnerable to SQLi)
+├── secure_app.py          # Secure Flask app (parameterized queries & RLS)
+├── requirements.txt       # Python dependencies
+├── .env                   # Environment file for DB credentials
+└── README.md              # Project documentation
+```
 ---
 
 ## Phase Overview
