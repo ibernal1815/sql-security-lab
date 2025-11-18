@@ -134,7 +134,7 @@ sudo -u postgres psql -f database/seed_data.sql
 
 ```
 python vulnerable_app.py
-or
+[ OR ]
 python secure_app.py
 ```
 
