@@ -20,6 +20,7 @@ The goal of this lab is to gain hands-on experience with:
 
 ## Project Structure
 
+md'''
 sql_security_lab/
 ├── app/
 │   ├── config.py            # Database configuration and environment loading
@@ -37,6 +38,7 @@ sql_security_lab/
 ├── requirements.txt         # Python dependencies
 ├── .env                     # Environment file for DB credentials
 └── README.md                # Project documentation
+'''md
 
 ---
 
