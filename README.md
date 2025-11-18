@@ -124,15 +124,19 @@ source venv/bin/activate
 
 ### 3. Initialize database:
 
-`sudo -u postgres psql -f database/roles.sql`
-`sudo -u postgres psql -f database/schema.sql`
-`sudo -u postgres psql -f database/seed_data.sql`
+```
+sudo -u postgres psql -f database/roles.sql
+sudo -u postgres psql -f database/schema.sql
+sudo -u postgres psql -f database/seed_data.sql
+```
 
 ### 4. Run the secure or vulnerable app:
 
-`python vulnerable_app.py`
+```
+python vulnerable_app.py
 or
-`python secure_app.py`
+python secure_app.py
+```
 
 ---
 
