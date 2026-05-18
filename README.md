@@ -1,163 +1,76 @@
-# SQL Security Lab
+# sql-security-lab
 
-This repository is a personal project created to explore SQL security practices using PostgreSQL and Flask. It is not a tutorial or production-ready application, but rather a learning artifact documenting experiments with SQL injection, secure query patterns, and database hardening.
+two Flask apps, one PostgreSQL database, and one question — how bad does it actually get when you skip input validation?
 
----
+i built this to stop treating SQL injection as a concept and start treating it as something i could demonstrate, measure, and fix. the lab runs both a vulnerable and a hardened version of the same application side by side so the difference isn't theoretical — you can watch the attack work, then watch it fail.
 
-## Purpose
+## background / why i built this
 
-The goal of this lab is to gain hands-on experience with:
+SQL injection consistently tops vulnerability lists and has for decades. every security course covers it but most of the time you see it as a one-liner example in a slide. i wanted to actually build the vulnerable app, run the attack myself, and then harden it layer by layer — not just patch the query, but lock down the database the way you would in a real environment.
 
-- Understanding SQL injection vulnerabilities and exploitation
-- Implementing secure query patterns using parameterized SQL
-- Using PostgreSQL role-based access control
-- Enabling Row-Level Security (RLS) for tenant isolation
-- Monitoring PostgreSQL using `pg_stat_statements`
-- Enforcing SSL and SCRAM-SHA-256 authentication
-- Applying least-privilege principles
+so i built both versions. vulnerable_app.py has the broken login. secure_app.py has parameterized queries, role-based access control, Row-Level Security, and SSL enforcement. same schema, same data, completely different posture.
 
----
+## what it does
 
-## Project Structure
+**phase 1 — vulnerable app**
+a Flask login form backed by PostgreSQL that builds queries with raw string concatenation. a classic `' OR TRUE --` bypasses authentication entirely. the point is to see it work, not just read about it.
 
-```plaintext
+**phase 2 — database hardening**
+three PostgreSQL roles with least-privilege access: app_user, app_reader, and admin. superuser privileges stripped from the app user. SCRAM-SHA-256 authentication enforced. SSL required. default privileges revoked.
+
+**phase 3 — secure app**
+same login flow, rewritten with parameterized queries and the correct role in the connection context. Row-Level Security enabled so users can only access their own rows regardless of what the query looks like. injection attempts return nothing.
+
+**phase 4 — monitoring**
+pg_stat_statements enabled to track query execution patterns across both apps. useful for seeing exactly what queries each version is running and where the attack surface was.
+
+## project layout
+
+```
 sql_security_lab/
 ├── app/
-│   ├── config.py          # Database configuration and environment loading
-│   ├── db.py              # Secure and insecure DB connection helpers
-│   ├── seed.py            # Initializes schema and seeds data
-│
+│   ├── config.py
+│   ├── db.py
+│   └── seed.py
 ├── database/
-│   ├── roles.sql          # Defines database roles and permissions
-│   ├── schema.sql         # Defines the application schema
-│   ├── seed_data.sql      # Inserts sample user data
-│
+│   ├── roles.sql
+│   ├── schema.sql
+│   └── seed_data.sql
 ├── scripts/
-│   ├── start_postgres.sh  # Script to start PostgreSQL service
-│   ├── init_db.sh         # Wrapper for running SQL setup scripts
-│
-├── vulnerable_app.py      # Insecure Flask app (vulnerable to SQLi)
-├── secure_app.py          # Secure Flask app (parameterized queries & RLS)
-├── requirements.txt       # Python dependencies
-├── .env                   # Environment file for DB credentials
-└── README.md              # Project documentation
+│   ├── start_postgres.sh
+│   └── init_db.sh
+├── vulnerable_app.py
+├── secure_app.py
+├── requirements.txt
+└── .env
 ```
----
 
-## Phase Overview
+## setup
 
-This project is separated into four phases:
-
-### Phase 1: Insecure App
-- Create a basic Flask app that connects to PostgreSQL
-- Implement a login form vulnerable to SQL injection
-- Insert sample users into the database
-- Use `vulnerable_app.py` to demonstrate an injection attack (e.g. `' OR TRUE --`)
-
-### Phase 2: Database Hardening
-- Create distinct roles: `app_user`, `app_reader`, `admin`
-- Use least-privilege access controls
-- Remove superuser privileges from `app_user`
-- Revoke default privileges
-- Configure SCRAM-SHA-256 authentication and enforce SSL
-
-### Phase 3: Secure App
-- Implement `secure_app.py` using parameterized queries
-- Use proper role and SSL context in DB connection
-- Enable basic user isolation with a `tenant_id` field
-- Optionally apply Row-Level Security (RLS)
-
-### Phase 4: Monitoring and Performance
-- Enable `pg_stat_statements` in `postgresql.conf`
-- Query execution stats to monitor access patterns
-- Review tracked queries from `secure_app.py` and `vulnerable_app.py`
-
----
-
-## Screenshots
-Screenshots for each phase can be found in `/screenshots`:
-
-- `phase1_injection_demo.png`
-- `phase2_roles_permissions.png`
-- `phase2_ssl_config.png`
-- `phase3_secure_app_login.png`
-- `phase4_pg_stat_activity.png`
-
----
-
-## Requirements
-
-### System
-- Linux Mint or Ubuntu VM
-- PostgreSQL (tested with version 14+)
-- Python 3 and virtualenv
-
-### Python Libraries
-
-Install dependencies using:
 ```bash
-pip install -r requirements.txt
-```
+git clone https://github.com/ibernal1815/sql-security-lab.git
+cd sql-security-lab
 
-### Minimal set includes:
-- Flask
-- psycopg2-binary
-- python-dotenv
-
----
-
-## Setup
-
-### 1. Clone the repository:
-
-```
-git clone https://github.com/yourname/sql_security_lab.git
-cd sql_security_lab
-```
-
-### 2. Start your virtual environment:
-
-```
 python3 -m venv venv
 source venv/bin/activate
-```
 
-### 3. Initialize database:
-
-```
 sudo -u postgres psql -f database/roles.sql
 sudo -u postgres psql -f database/schema.sql
 sudo -u postgres psql -f database/seed_data.sql
 ```
 
-### 4. Run the secure or vulnerable app:
+run the vulnerable app:
 
-```
+```bash
 python vulnerable_app.py
-[ OR ]
+```
+
+run the secure app:
+
+```bash
 python secure_app.py
 ```
 
----
+## stack
 
-## Key Learnings
-
-- Unsafe query construction opens the door for SQL injection
-- Parameterized queries mitigate injection entirely
-- Least privilege roles help minimize damage from compromised web apps
-- PostgreSQL Row-Level Security enables powerful tenant isolation
-- Monitoring with `pg_stat_statements` supports both security and optimization
-
----
-
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-
----
-
-## Notes
-
-- This is an educational project; do not deploy in production
-- All testing was performed on an isolated VM
-- Feel free to fork or modify for your own learning
+Python 3 · Flask · PostgreSQL · psycopg2 · pg_stat_statements
