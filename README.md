@@ -1,12 +1,12 @@
 # sql-security-lab
 
-two Flask apps, one PostgreSQL database, and one question — how bad does it actually get when you skip input validation?
+two Flask apps, one PostgreSQL database, and one question. how bad does it actually get when you skip input validation?
 
-i built this to stop treating SQL injection as a concept and start treating it as something i could demonstrate, measure, and fix. the lab runs both a vulnerable and a hardened version of the same application side by side so the difference isn't theoretical — you can watch the attack work, then watch it fail.
+i built this to stop treating SQL injection as a concept and start treating it as something i could demonstrate, measure, and fix. the lab runs both a vulnerable and a hardened version of the same application side by side so the difference is not theoretical. you can watch the attack work, then watch it fail.
 
 ## background / why i built this
 
-SQL injection consistently tops vulnerability lists and has for decades. every security course covers it but most of the time you see it as a one-liner example in a slide. i wanted to actually build the vulnerable app, run the attack myself, and then harden it layer by layer — not just patch the query, but lock down the database the way you would in a real environment.
+SQL injection consistently tops vulnerability lists and has for decades. every security course covers it but most of the time you see it as a one-liner example in a slide. i wanted to actually build the vulnerable app, run the attack myself, and then harden it layer by layer. not just patch the query, but lock down the database the way you would in a real environment.
 
 so i built both versions. vulnerable_app.py has the broken login. secure_app.py has parameterized queries, role-based access control, Row-Level Security, and SSL enforcement. same schema, same data, completely different posture.
 
